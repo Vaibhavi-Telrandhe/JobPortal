@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import Navbar from "../shared/Navbar";
-import { Label } from "@radix-ui/react-label";
+import { Label } from "@/components/ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useSelector } from "react-redux";
 import {
   Select,
@@ -18,8 +19,6 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
-const companyArray = [];
-
 const PostJob = () => {
   const [input, setInput] = useState({
     title: "",
@@ -32,21 +31,17 @@ const PostJob = () => {
     position: 0,
     companyId: "",
   });
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { companies } = useSelector((store) => store.company);
+
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
+
   const selectChangeHandler = (value) => {
-    const selectedCompany = companies.find(
-      (company) => company._id.toLowerCase() === value
-    );
-    if(!selectedCompany){
-      console.warn("Company not found for value:",value);
-      return;
-    }
-    setInput({ ...input, companyId: selectedCompany._id });
+    setInput({ ...input, companyId: value });
   };
 
   const submitHandler = async (e) => {
@@ -54,148 +49,169 @@ const PostJob = () => {
     try {
       setLoading(true);
       const res = await axios.post(`${JOB_API_END_POINT}/post`, input, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
+
       if (res.data.success) {
         toast.success(res.data.message);
         navigate("/admin/jobs");
       }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Failed to post job");
     } finally {
       setLoading(false);
     }
   };
+
   return (
-    <div>
+    <>
       <Navbar />
-      <div className="flex items-center justify-center w-screen my-5">
+
+      <div className="flex justify-center py-10 bg-gray-50 min-h-screen">
         <form
           onSubmit={submitHandler}
-          className="p-8 max-w-4xl border border-gray-200 shadow-lg rounded-md"
+          className="w-full max-w-5xl bg-white p-8 rounded-xl shadow-md border"
         >
-          <div className="grid grid-cols-2 gap-2">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">
+            Post a New Job
+          </h2>
+
+          {/* Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Title */}
             <div>
-              <Label>Title</Label>
+              <Label>Job Title</Label>
               <Input
-                type="text"
                 name="title"
                 value={input.title}
                 onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
+                placeholder="Frontend Developer"
               />
             </div>
-            <div>
-              <Label>Description</Label>
-              <Input
-                type="text"
-                name="description"
-                value={input.description}
-                onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
-              />
-            </div>
-            <div>
-              <Label>Requirements</Label>
-              <Input
-                type="text"
-                name="requirements"
-                value={input.requirements}
-                onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
-              />
-            </div>
+
+            {/* Salary */}
             <div>
               <Label>Salary</Label>
               <Input
-                type="text"
                 name="salary"
                 value={input.salary}
                 onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
+                placeholder="₹8,00,000 / year"
               />
             </div>
+
+            {/* Location */}
             <div>
               <Label>Location</Label>
               <Input
-                type="text"
                 name="location"
                 value={input.location}
                 onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
+                placeholder="Bangalore / Remote"
               />
             </div>
+
+            {/* Job Type */}
             <div>
               <Label>Job Type</Label>
               <Input
-                type="text"
                 name="jobType"
                 value={input.jobType}
                 onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
+                placeholder="Full-time / Internship"
               />
             </div>
+
+            {/* Experience */}
             <div>
               <Label>Experience Level</Label>
               <Input
-                type="text"
                 name="experience"
                 value={input.experience}
                 onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
+                placeholder="0–2 years"
               />
             </div>
+
+            {/* Positions */}
             <div>
-              <Label>No. of Position</Label>
+              <Label>No. of Positions</Label>
               <Input
                 type="number"
                 name="position"
                 value={input.position}
                 onChange={changeEventHandler}
-                className="focus-visible:ring-offset-8 focus-visible:ring-8 my-1"
               />
             </div>
 
-            {companies.length > 0 && (
-              <Select onValueChange={selectChangeHandler}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a Company" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {companies.map((company) => {
-                      return (
+            {/* Company Select */}
+            <div className="md:col-span-2">
+              <Label>Company</Label>
+              {companies.length > 0 ? (
+                <Select onValueChange={selectChangeHandler}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {companies.map((company) => (
                         <SelectItem key={company._id} value={company._id}>
                           {company.name}
                         </SelectItem>
-                      );
-                    })}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            )}
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm text-red-600 mt-2">
+                  Please register a company before posting a job.
+                </p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="md:col-span-2">
+              <Label>Description</Label>
+              <Textarea
+                name="description"
+                value={input.description}
+                onChange={changeEventHandler}
+                placeholder="Describe the job role..."
+                rows={4}
+              />
+            </div>
+
+            {/* Requirements */}
+            <div className="md:col-span-2">
+              <Label>Requirements</Label>
+              <Textarea
+                name="requirements"
+                value={input.requirements}
+                onChange={changeEventHandler}
+                placeholder="Skills, tools, experience required..."
+                rows={4}
+              />
+            </div>
           </div>
-           {loading ? (
-              <Button className="w-full my-4" disabled>
+
+          {/* Submit */}
+          <div className="mt-8">
+            {loading ? (
+              <Button className="w-full" disabled>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Please wait
+                Posting job...
               </Button>
             ) : (
-              <Button type="submit" className="w-full my-4">Post New Jobs</Button>
+              <Button type="submit" className="w-full">
+                Post Job
+              </Button>
             )}
-          {companies.length === 0 && 
-            <p className="text-xs text-red-600 font-bold text-center my-3">
-              *Please register a company first, before posting a job
-            </p>
-          }
-
+          </div>
         </form>
       </div>
-    </div>
-  )
-}
+    </>
+  );
+};
 
-export default PostJob
+export default PostJob;

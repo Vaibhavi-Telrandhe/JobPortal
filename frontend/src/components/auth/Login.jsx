@@ -18,7 +18,7 @@ const Login = () => {
     password: "",
     role: "",
   });
-  const { loading,user } = useSelector((store) => store.auth);
+  const { loading, user } = useSelector((store) => store.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -37,45 +37,30 @@ const Login = () => {
 
     try {
       dispatch(setLoading(true));
-      const res = await axios.post(
-        `${USER_API_END_POINT}/login`,
-        input,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axios.post(`${USER_API_END_POINT}/login`, input, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
 
       if (res.data.success) {
-        // Create user data from form input since API doesn't return it
-        const userData = {
-          _id: Date.now().toString(),
-          fullname: input.email.split('@')[0].replace(/[^a-zA-Z]/g, '').charAt(0).toUpperCase() + input.email.split('@')[0].replace(/[^a-zA-Z]/g, '').slice(1),
-          email: input.email,
-          role: input.role,
-          phoneNumber: "1234567890",
-          profile: {
-            bio: `I am a ${input.role} looking for opportunities`,
-            profilePhoto: null,
-            skills: [],
-            resume: null,
-          }
-        };
-
-        console.log("✅ SETTING USER DATA:", userData);
+        // ✅ USE REAL USER DATA FROM BACKEND (includes populated savedJobs)
+        console.log("✅ Login response user:", res.data.user);
         
-        // Store user data in Redux
-        dispatch(setUser(userData));
+        dispatch(setUser(res.data.user));
         
-        console.log("✅ USER SET IN REDUX - NAVIGATING TO HOME");
+        toast.success(res.data.message || "Login successful!");
         
-        navigate("/");
-        toast.success("Login successful!");
+        // ✅ Navigate based on role
+        if (res.data.user.role === "recruiter") {
+          navigate("/admin/companies");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
-      console.log("Login error:", error);
+      console.log("❌ Login error:", error);
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -86,11 +71,12 @@ const Login = () => {
     }
   };
 
-  useEffect(()=>{
-    if(user){
-        navigate("/");
+  useEffect(() => {
+    if (user) {
+      navigate("/");
     }
-  },[])
+  }, []);
+
   return (
     <div>
       <Navbar />
@@ -153,7 +139,7 @@ const Login = () => {
               </div>
             </RadioGroup>
           </div>
-          
+
           <div className="flex justify-center">
             {loading ? (
               <Button className="w-full my-4" disabled>
@@ -161,7 +147,9 @@ const Login = () => {
                 Please wait
               </Button>
             ) : (
-              <Button type="submit" className="w-full my-4">Login</Button>
+              <Button type="submit" className="w-full my-4">
+                Login
+              </Button>
             )}
           </div>
 

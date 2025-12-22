@@ -1,27 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Load user from localStorage on app start
-const loadUserFromStorage = () => {
-  try {
-    const savedUser = localStorage.getItem('jobportal_user');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      console.log('🔄 Loading user from localStorage:', parsedUser);
-      return parsedUser;
-    }
-    return null;
-  } catch (error) {
-    console.error('❌ Error loading user from localStorage:', error);
-    localStorage.removeItem('jobportal_user');
-    return null;
-  }
-};
-
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     loading: false,
-    user: loadUserFromStorage(),
+    user: null, // ✅ Start with null, let useLoadUser fetch fresh data
   },
   reducers: {
     setLoading: (state, action) => {
@@ -31,7 +14,7 @@ const authSlice = createSlice({
       console.log('🔄 Setting user in Redux:', action.payload);
       state.user = action.payload;
       
-      // Save to localStorage
+      // ✅ Save to localStorage only for persistence between page refreshes
       if (action.payload) {
         localStorage.setItem('jobportal_user', JSON.stringify(action.payload));
         console.log('✅ User saved to localStorage');

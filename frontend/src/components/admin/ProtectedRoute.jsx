@@ -1,21 +1,25 @@
-import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from"react-router-dom";
+import { Navigate } from "react-router-dom";
 
+const ProtectedRoute = ({ children, role }) => {
+  const { user, loading } = useSelector((store) => store.auth);
 
-const ProtectedRoute = ({ children }) => {
-    const {user}=useSelector(store=>store.auth);
-    const navigate=useNavigate();
-    useEffect(()=>{
-        if(used===null || user.role!=='recruiter')
-            {
-                navigate("/")
-            }
-    },[]);
-    return(
-        <>
-        {children}
-        </>
-    )
+  // ⏳ Wait until auth finishes loading
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>;
+  }
+
+  // 🔒 Not logged in
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 🔐 Role-based protection (optional)
+  if (role && user.role !== role) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 };
+
 export default ProtectedRoute;

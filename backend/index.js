@@ -9,12 +9,6 @@ import jobRoute from "./routes/job.route.js"
 import applicationRoute from "./routes/application.route.js"
 dotenv.config({});
 const app=express();
-// app.get("/home",(req,res)=>{
-//     return res.status(200).json({
-// message:"i am coming from backend",
-// success:true
-//     })
-//     })
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());

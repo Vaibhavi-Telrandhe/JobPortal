@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
           "https://res.cloudinary.com/dz1qj3x4h/image/upload/v1709301234/default-profile-photo.png",
       },
     },
+     savedJobs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Job",
+      },
+    ],
   },
   { timestamps: true }
 );

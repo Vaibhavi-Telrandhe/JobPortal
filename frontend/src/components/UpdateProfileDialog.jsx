@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,13 +20,27 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
   const { user } = useSelector((store) => store.auth);
 
   const [input, setInput] = useState({
-    fullname: user?.fullname || "",
-    email: user?.email || "",
-    phoneNumber: user?.phoneNumber || "",
-    bio: user?.profile?.bio || "",
-    skills: user?.profile?.skills || [],
+    fullname: "",
+    email: "",
+    phoneNumber: "",
+    bio: "",
+    skills: [],
     file: null,
   });
+
+  /* 🔑 Sync dialog state with redux user */
+  useEffect(() => {
+    if (user && open) {
+      setInput({
+        fullname: user.fullname || "",
+        email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
+        bio: user.profile?.bio || "",
+        skills: user.profile?.skills || [],
+        file: null,
+      });
+    }
+  }, [user, open]);
 
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -39,17 +53,24 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
-    formData.append("fullname", input.fullname);
-    formData.append("email", input.email);
-    formData.append("phoneNumber", input.phoneNumber);
-    formData.append("bio", input.bio);
-    formData.append("skills", JSON.stringify(input.skills));
+
+    // ✅ Send only filled fields
+    if (input.fullname) formData.append("fullname", input.fullname);
+    if (input.email) formData.append("email", input.email);
+    if (input.phoneNumber) formData.append("phoneNumber", input.phoneNumber);
+    if (input.bio) formData.append("bio", input.bio);
+    if (input.skills.length > 0) {
+      formData.append("skills", input.skills.join(","));
+    }
     if (input.file) {
       formData.append("file", input.file);
     }
+
     try {
-      setLoading(true);
+      dispatch(setLoading(true));
+
       const res = await axios.post(
         `${USER_API_END_POINT}/profile/update`,
         formData,
@@ -58,24 +79,29 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
           withCredentials: true,
         }
       );
+
       if (res.data.success) {
         dispatch(setUser(res.data.user));
         toast.success(res.data.message);
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Update failed");
-    }finally{
-      setLoading(false);
+    } finally {
+      dispatch(setLoading(false));
+      setOpen(false);
     }
-    setOpen(false);
   };
 
   return (
     <Dialog open={open}>
-      <DialogContent className="sm:max-w-[425px]" onInteractOutside={() => setOpen(false)}>
+      <DialogContent
+        className="sm:max-w-[425px]"
+        onInteractOutside={() => setOpen(false)}
+      >
         <DialogHeader>
           <DialogTitle>Update Profile</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={submitHandler}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -85,12 +111,12 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
               <Input
                 id="fullname"
                 name="fullname"
-                type="text"
                 value={input.fullname}
                 onChange={changeEventHandler}
                 className="col-span-3"
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="email" className="text-right">
                 Email
@@ -98,12 +124,12 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
               <Input
                 id="email"
                 name="email"
-                type="email"
                 value={input.email}
                 onChange={changeEventHandler}
                 className="col-span-3"
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phoneNumber" className="text-right">
                 Number
@@ -116,6 +142,7 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
                 className="col-span-3"
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="bio" className="text-right">
                 Bio
@@ -128,6 +155,7 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
                 className="col-span-3"
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="skills" className="text-right">
                 Skills
@@ -137,18 +165,21 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
                 name="skills"
                 value={input.skills.join(",")}
                 onChange={(e) =>
-                  setInput({ ...input, skills: e.target.value.split(",") })
+                  setInput({
+                    ...input,
+                    skills: e.target.value.split(",").map((s) => s.trim()),
+                  })
                 }
                 className="col-span-3"
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="file" className="text-right">
                 Resume
               </Label>
               <Input
                 id="file"
-                name="file"
                 type="file"
                 accept="application/pdf"
                 onChange={fileChangeHandler}
@@ -156,6 +187,7 @@ const UpdateProfileDialog = ({ open, setOpen }) => {
               />
             </div>
           </div>
+
           <DialogFooter>
             <Button type="submit" className="w-full my-4">
               Update

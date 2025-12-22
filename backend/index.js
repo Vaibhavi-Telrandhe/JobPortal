@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 const corsOptions={
-    origin:"https://jobportal-backend1-eqq8.onrender.com",
+    origin:"https://jobportal-frontend-x0av.onrender.com",
     credentials:true
 };
 app.use(cors(corsOptions));

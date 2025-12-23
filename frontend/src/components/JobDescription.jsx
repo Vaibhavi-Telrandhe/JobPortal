@@ -29,26 +29,29 @@ const JobDescription = () => {
   const jobId = params.id;
   const dispatch = useDispatch();
 
-  const applyJobHandler = async () => {
-    try {
-      const res = await axios.get(
-        `${APPLICATION_API_END_POINT}/apply/${jobId}`,
-        { withCredentials: true }
-      );
-      if (res.data.success) {
-        setIsApplied(true);
-        const updatedSingleJob = {
-          ...singleJob,
-          applications: [...singleJob.applications, { applicant: user?._id }],
-        };
-        dispatch(setSingleJob(updatedSingleJob));
-        toast.success(res.data.message);
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.message);
+ const applyJobHandler = async () => {
+  try {
+    const res = await axios.post(
+      `${APPLICATION_API_END_POINT}/apply/${jobId}`,
+      {},
+      { withCredentials: true }
+    );
+
+    if (res.data.success) {
+      setIsApplied(true);
+      const updatedSingleJob = {
+        ...singleJob,
+        applications: [...singleJob.applications, { applicant: user?._id }],
+      };
+      dispatch(setSingleJob(updatedSingleJob));
+      toast.success(res.data.message);
     }
-  };
+  } catch (error) {
+    console.log(error);
+    toast.error(error.response?.data?.message);
+  }
+};
+  
 
   // ✅ Save/Unsave Job Handler
   const handleSaveJob = async () => {

@@ -90,7 +90,7 @@ export const login = async (req, res) => {
       expiresIn: "1d",
     });
 
-    // ✅ Still set cookie for local dev
+    // Set cookie for local development
     res.cookie("token", token, {
       maxAge: 1 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -109,7 +109,7 @@ export const login = async (req, res) => {
     return res.status(200).json({
       message: `Welcome back ${user.fullname}`,
       user,
-      token, // ✅ SEND TOKEN IN RESPONSE BODY
+      token, // ✅ IMPORTANT: Send token in response
       success: true,
     });
   } catch (error) {

@@ -13,8 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import axios from "axios";
-import { JOB_API_END_POINT } from "@/utils/constant";
+import api from "@/utils/axios"; // ✅ CHANGED
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -49,16 +48,7 @@ const PostJob = () => {
     try {
       setLoading(true);
       
-      // ✅ Get token from localStorage
-      const token = localStorage.getItem("token");
-      
-      const res = await axios.post(`${JOB_API_END_POINT}/post`, input, {
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // ✅ Add token to header
-        },
-        withCredentials: true,
-      });
+      const res = await api.post("/job/post", input); // ✅ CHANGED
 
       if (res.data.success) {
         toast.success(res.data.message);
@@ -66,16 +56,7 @@ const PostJob = () => {
       }
     } catch (error) {
       console.error("Post job error:", error);
-      
-      // ✅ Handle 401 errors
-      if (error.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
-      } else {
-        toast.error(error.response?.data?.message || "Failed to post job");
-      }
+      toast.error(error.response?.data?.message || "Failed to post job");
     } finally {
       setLoading(false);
     }
@@ -84,7 +65,6 @@ const PostJob = () => {
   return (
     <>
       <Navbar />
-
       <div className="flex justify-center py-10 bg-gray-50 min-h-screen">
         <form
           onSubmit={submitHandler}
@@ -94,9 +74,7 @@ const PostJob = () => {
             Post a New Job
           </h2>
 
-          {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Title */}
             <div>
               <Label>Job Title</Label>
               <Input
@@ -108,7 +86,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Salary */}
             <div>
               <Label>Salary</Label>
               <Input
@@ -120,7 +97,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Location */}
             <div>
               <Label>Location</Label>
               <Input
@@ -132,7 +108,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Job Type */}
             <div>
               <Label>Job Type</Label>
               <Input
@@ -144,7 +119,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Experience */}
             <div>
               <Label>Experience Level</Label>
               <Input
@@ -156,7 +130,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Positions */}
             <div>
               <Label>No. of Positions</Label>
               <Input
@@ -169,7 +142,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Company Select */}
             <div className="md:col-span-2">
               <Label>Company</Label>
               {companies.length > 0 ? (
@@ -194,7 +166,6 @@ const PostJob = () => {
               )}
             </div>
 
-            {/* Description */}
             <div className="md:col-span-2">
               <Label>Description</Label>
               <Textarea
@@ -207,7 +178,6 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Requirements */}
             <div className="md:col-span-2">
               <Label>Requirements</Label>
               <Textarea
@@ -221,7 +191,6 @@ const PostJob = () => {
             </div>
           </div>
 
-          {/* Submit */}
           <div className="mt-8">
             {loading ? (
               <Button className="w-full" disabled>

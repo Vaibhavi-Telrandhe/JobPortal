@@ -5,7 +5,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// ✅ Add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -19,7 +18,6 @@ api.interceptors.request.use(
   }
 );
 
-// ✅ Handle 401 errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {

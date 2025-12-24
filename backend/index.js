@@ -12,22 +12,18 @@ dotenv.config();
 
 const app = express();
 
-// Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Cookies
 app.use(cookieParser());
 
-// CORS setup
 const allowedOrigins = [
-  "http://localhost:5173", // local frontend
-  "https://jobportal-frontend-x0av.onrender.com" // deployed frontend
+  "http://localhost:5173",
+  "https://jobportal-frontend-x0av.onrender.com"
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow non-browser requests like Postman
+    if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -36,21 +32,19 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"], // ✅ IMPORTANT
+  exposedHeaders: ["Authorization"] // ✅ IMPORTANT
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // handle preflight requests
+app.options("*", cors(corsOptions));
 
-// Routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
 
-// Server
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, async () => {
   try {
     await connectDB();

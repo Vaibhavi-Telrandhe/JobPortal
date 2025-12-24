@@ -45,8 +45,15 @@ const Login = () => {
       });
 
       if (res.data.success) {
-        // ✅ USE REAL USER DATA FROM BACKEND (includes populated savedJobs)
+        // ✅ Store token in localStorage
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token);
+          console.log("✅ Token saved to localStorage");
+        }
+
+        // ✅ Store user data
         console.log("✅ Login response user:", res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
         
         dispatch(setUser(res.data.user));
         

@@ -51,52 +51,75 @@ export const register = async (req, res) => {
   }
 };
 
-/* ================= LOGIN ================= */
 export const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res.status(400).json({
+        message: "Something is missing",
+        success: false,
+      });
     }
 
-    const userFromDb = await User.findOne({ email });
-    if (!userFromDb) return res.status(400).json({ success: false, message: "User not found" });
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        message: "Incorrect email or password.",
+        success: false,
+      });
+    }
 
-    const isMatch = await bcrypt.compare(password, userFromDb.password);
-    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(400).json({
+        message: "Incorrect email or password.",
+        success: false,
+      });
+    }
 
-    if (userFromDb.role !== role)
-      return res.status(400).json({ success: false, message: "Role mismatch" });
+    if (role !== user.role) {
+      return res.status(400).json({
+        message: "Account doesn't exist with current role.",
+        success: false,
+      });
+    }
 
-    // ✅ Populate savedJobs with company info
-    const user = await User.findById(userFromDb._id)
-      .select("-password")
-      .populate({
-        path: "savedJobs",
-        populate: {
-          path: "company",
-          select: "name logo",
-        },
-      })
-      .lean();
+    const tokenData = { userId: user._id };
+    const token = jwt.sign(tokenData, process.env.SECRET_KEY, {
+      expiresIn: "1d",
+    });
 
-    const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, { expiresIn: "1d" });
+    // ✅ Still set cookie for local dev
+    res.cookie("token", token, {
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "strict",
+    });
 
-    return res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000,
-      })
-      .status(200)
-      .json({ success: true, message: `Welcome back ${user.fullname}`, user });
+    user = {
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      profile: user.profile,
+    };
+
+    return res.status(200).json({
+      message: `Welcome back ${user.fullname}`,
+      user,
+      token, // ✅ SEND TOKEN IN RESPONSE BODY
+      success: true,
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: "Login failed" });
+    console.log(error);
+    return res.status(500).json({
+      message: "Server error",
+      success: false,
+    });
   }
 };
-
 /* ================= SAVE JOB ================= */
 export const saveJob = async (req, res) => {
   try {

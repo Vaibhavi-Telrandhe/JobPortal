@@ -48,8 +48,15 @@ const PostJob = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      
+      // ✅ Get token from localStorage
+      const token = localStorage.getItem("token");
+      
       const res = await axios.post(`${JOB_API_END_POINT}/post`, input, {
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // ✅ Add token to header
+        },
         withCredentials: true,
       });
 
@@ -58,7 +65,17 @@ const PostJob = () => {
         navigate("/admin/jobs");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to post job");
+      console.error("Post job error:", error);
+      
+      // ✅ Handle 401 errors
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      } else {
+        toast.error(error.response?.data?.message || "Failed to post job");
+      }
     } finally {
       setLoading(false);
     }
@@ -87,6 +104,7 @@ const PostJob = () => {
                 value={input.title}
                 onChange={changeEventHandler}
                 placeholder="Frontend Developer"
+                required
               />
             </div>
 
@@ -98,6 +116,7 @@ const PostJob = () => {
                 value={input.salary}
                 onChange={changeEventHandler}
                 placeholder="₹8,00,000 / year"
+                required
               />
             </div>
 
@@ -109,6 +128,7 @@ const PostJob = () => {
                 value={input.location}
                 onChange={changeEventHandler}
                 placeholder="Bangalore / Remote"
+                required
               />
             </div>
 
@@ -120,6 +140,7 @@ const PostJob = () => {
                 value={input.jobType}
                 onChange={changeEventHandler}
                 placeholder="Full-time / Internship"
+                required
               />
             </div>
 
@@ -131,6 +152,7 @@ const PostJob = () => {
                 value={input.experience}
                 onChange={changeEventHandler}
                 placeholder="0–2 years"
+                required
               />
             </div>
 
@@ -142,6 +164,8 @@ const PostJob = () => {
                 name="position"
                 value={input.position}
                 onChange={changeEventHandler}
+                required
+                min="1"
               />
             </div>
 
@@ -149,7 +173,7 @@ const PostJob = () => {
             <div className="md:col-span-2">
               <Label>Company</Label>
               {companies.length > 0 ? (
-                <Select onValueChange={selectChangeHandler}>
+                <Select onValueChange={selectChangeHandler} required>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a company" />
                   </SelectTrigger>
@@ -179,6 +203,7 @@ const PostJob = () => {
                 onChange={changeEventHandler}
                 placeholder="Describe the job role..."
                 rows={4}
+                required
               />
             </div>
 
@@ -189,8 +214,9 @@ const PostJob = () => {
                 name="requirements"
                 value={input.requirements}
                 onChange={changeEventHandler}
-                placeholder="Skills, tools, experience required..."
+                placeholder="React, Node.js, MongoDB, 2 years experience"
                 rows={4}
+                required
               />
             </div>
           </div>
